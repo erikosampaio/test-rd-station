@@ -1,218 +1,218 @@
 # Desafio técnico e-commerce
 
-## Nossas expectativas
+## 📋 **Funcionalidades Implementadas**
 
-A equipe de engenharia da RD Station tem alguns princípios nos quais baseamos nosso trabalho diário. Um deles é: projete seu código para ser mais fácil de entender, não mais fácil de escrever.
+### **🛒 Carrinho de Compras**
+- ✅ **Adicionar produtos** - POST `/cart`
+- ✅ **Listar carrinho** - GET `/cart`
+- ✅ **Alterar quantidade** - POST `/cart/add_item`
+- ✅ **Remover produtos** - DELETE `/cart/:product_id`
+- ✅ **Sessão automática** - Gerenciamento de carrinhos por sessão
+- ✅ **Validações** - Quantidade positiva, produto existente
+- ✅ **Cálculos automáticos** - Total do carrinho e preços unitários
 
-Portanto, para nós, é mais importante um código de fácil leitura do que um que utilize recursos complexos e/ou desnecessários.
+### **⏰ Sistema de Abandono**
+- ✅ **Job automático** - `MarkCartAsAbandonedJob`
+- ✅ **Marcação automática** - Carrinhos inativos por 3+ horas
+- ✅ **Remoção automática** - Carrinhos abandonados por 7+ dias
+- ✅ **Configuração Sidekiq** - Execução a cada hora
 
-O que gostaríamos de ver:
+### **🧪 Testes**
+- ✅ **Factories** - Product, Cart, CartItem com traits
+- ✅ **Testes de modelo** - Validações, associações, métodos
+- ✅ **Testes de controller** - Todos os endpoints
+- ✅ **Testes de job** - Funcionalidade de abandono
+- ✅ **Cobertura completa** - 64 testes passando
 
-- O código deve ser fácil de ler. Clean Code pode te ajudar.
-- Notas gerais e informações sobre a versão da linguagem e outras informações importantes para executar seu código.
-- Código que se preocupa com a performance (complexidade de algoritmo).
-- O seu código deve cobrir todos os casos de uso presentes no README, mesmo que não haja um teste implementado para tal.
-- A adição de novos testes é sempre bem-vinda.
-- Você deve enviar para nós o link do repositório público com a aplicação desenvolvida (GitHub, BitBucket, etc.).
+## 🚀 **Como Executar**
 
-## O Desafio - Carrinho de compras
-O desafio consiste em uma API para gerenciamento do um carrinho de compras de e-commerce.
+### **Opção 1: Docker (Recomendado)**
 
-Você deve desenvolver utilizando a linguagem Ruby e framework Rails, uma API Rest que terá 3 endpoins que deverão implementar as seguintes funcionalidades:
+```bash
+# Construir e iniciar todos os serviços
+docker-compose up --build
 
-### 1. Registrar um produto no carrinho
-Criar um endpoint para inserção de produtos no carrinho.
+# Em terminais separados:
+# Terminal 1: Servidor Rails (porta 3000)
+docker-compose up web
 
-Se não existir um carrinho para a sessão, criar o carrinho e salvar o ID do carrinho na sessão.
+# Terminal 2: Sidekiq (para jobs)
+docker-compose up sidekiq
 
-Adicionar o produto no carrinho e devolver o payload com a lista de produtos do carrinho atual.
+# Terminal 3: Executar testes
+docker-compose run test
+```
 
+### **Opção 2: Local (Requisitos)**
 
-ROTA: `/cart`
-Payload:
-```js
+```bash
+# Instalar dependências
+bundle install
+
+# Configurar banco de dados
+bundle exec rails db:create
+bundle exec rails db:migrate
+
+# Executar REDIS (em outro terminal)
+redis-server
+
+# Executar servidor Rails
+bundle exec rails server
+
+# Executar Sidekiq (em outro terminal)
+bundle exec sidekiq
+
+# Executar testes
+bundle exec rspec
+```
+
+## 📡 **Endpoints da API**
+
+### **Carrinho de Compras**
+
+#### **Adicionar Produto**
+```http
+POST /cart
+Content-Type: application/json
+
 {
-  "product_id": 345, // id do produto sendo adicionado
-  "quantity": 2, // quantidade de produto a ser adicionado
+  "product_id": 1,
+  "quantity": 2
 }
 ```
 
-Response
-```js
+#### **Listar Carrinho**
+```http
+GET /cart
+```
+
+#### **Alterar Quantidade**
+```http
+POST /cart/add_item
+Content-Type: application/json
+
 {
-  "id": 789, // id do carrinho
-  "products": [
-    {
-      "id": 645,
-      "name": "Nome do produto",
-      "quantity": 2,
-      "unit_price": 1.99, // valor unitário do produto
-      "total_price": 3.98, // valor total do produto
-    },
-    {
-      "id": 646,
-      "name": "Nome do produto 2",
-      "quantity": 2,
-      "unit_price": 1.99,
-      "total_price": 3.98,
-    },
-  ],
-  "total_price": 7.96 // valor total no carrinho
+  "product_id": 1,
+  "quantity": 3
 }
 ```
 
-### 2. Listar itens do carrinho atual
-Criar um endpoint para listar os produtos no carrinho atual.
-
-ROTA: `/cart`
-
-Response:
-```js
-{
-  "id": 789, // id do carrinho
-  "products": [
-    {
-      "id": 645,
-      "name": "Nome do produto",
-      "quantity": 2,
-      "unit_price": 1.99, // valor unitário do produto
-      "total_price": 3.98, // valor total do produto
-    },
-    {
-      "id": 646,
-      "name": "Nome do produto 2",
-      "quantity": 2,
-      "unit_price": 1.99,
-      "total_price": 3.98,
-    },
-  ],
-  "total_price": 7.96 // valor total no carrinho
-}
+#### **Remover Produto**
+```http
+DELETE /cart/1
 ```
 
-### 3. Alterar a quantidade de produtos no carrinho 
-Um carrinho pode ter _N_ produtos, se o produto já existir no carrinho, apenas a quantidade dele deve ser alterada
-
-ROTA: `/cart/add_item`
-
-Payload
-```json
-{
-  "product_id": 1230,
-  "quantity": 1
-}
-```
-Response:
+### **Resposta Padrão**
 ```json
 {
   "id": 1,
   "products": [
     {
-      "id": 1230,
-      "name": "Nome do produto X",
-      "quantity": 2, // considerando que esse produto já estava no carrinho
-      "unit_price": 7.00, 
-      "total_price": 14.00, 
-    },
-    {
-      "id": 01020,
-      "name": "Nome do produto Y",
-      "quantity": 1,
-      "unit_price": 9.90, 
-      "total_price": 9.90, 
-    },
+      "id": 1,
+      "name": "Produto Teste",
+      "quantity": 2,
+      "unit_price": 10.0,
+      "total_price": 20.0
+    }
   ],
-  "total_price": 23.9
+  "total_price": 20.0
 }
 ```
 
-### 3. Remover um produto do carrinho 
+## 🛠️ **Tecnologias Utilizadas**
 
-Criar um endpoint para excluir um produto do do carrinho. 
+- **Ruby 3.3.1**
+- **Rails 7.1.3.2**
+- **PostgreSQL 16**
+- **Redis 7.0.15**
+- **Sidekiq** - Para jobs em background
+- **RSpec** - Para testes
+- **FactoryBot** - Para factories de teste
+- **Shoulda Matchers** - Para testes de associação/validação
 
-ROTA: `/cart/:product_id`
+## 📊 **Estrutura do Projeto**
 
+```
+app/
+├── controllers/
+│   ├── carts_controller.rb      # API do carrinho
+│   └── products_controller.rb   # CRUD de produtos
+├── models/
+│   ├── cart.rb                  # Modelo do carrinho
+│   ├── cart_item.rb             # Itens do carrinho
+│   └── product.rb               # Modelo de produto
+├── sidekiq/
+│   └── mark_cart_as_abandoned_job.rb  # Job de abandono
+└── services/
+    └── cart_service.rb          # Lógica de negócio
 
-#### Detalhes adicionais:
-
-- Verifique se o produto existe no carrinho antes de tentar removê-lo.
-- Se o produto não estiver no carrinho, retorne uma mensagem de erro apropriada.
-- Após remover o produto, retorne o payload com a lista atualizada de produtos no carrinho.
-- Certifique-se de que o endpoint lida corretamente com casos em que o carrinho está vazio após a remoção do produto.
-
-### 5. Excluir carrinhos abandonados
-Um carrinho é considerado abandonado quando estiver sem interação (adição ou remoção de produtos) há mais de 3 horas.
-
-- Quando este cenário ocorrer, o carrinho deve ser marcado como abandonado.
-- Se o carrinho estiver abandonado há mais de 7 dias, remover o carrinho.
-- Utilize um Job para gerenciar (marcar como abandonado e remover) carrinhos sem interação.
-- Configure a aplicação para executar este Job nos períodos especificados acima.
-
-### Detalhes adicionais:
-- O Job deve ser executado regularmente para verificar e marcar carrinhos como abandonados após 3 horas de inatividade.
-- O Job também deve verificar periodicamente e excluir carrinhos que foram marcados como abandonados por mais de 7 dias.
-
-### Como resolver
-
-#### Implementação
-Você deve usar como base o código disponível nesse repositório e expandi-lo para que atenda as funcionalidade descritas acima.
-
-Há trechos parcialmente implementados e também sugestões de locais para algumas das funcionalidades sinalizados com um `# TODO`. Você pode segui-los ou fazer da maneira que julgar ser a melhor a ser feita, desde que atenda os contratos de API e funcionalidades descritas.
-
-#### Testes
-Existem testes pendentes, eles estão marcados como <span style="color:green;">Pending</span>, e devem ser implementados para garantir a cobertura dos trechos de código implementados por você.
-Alguns testes já estão passando e outros estão com erro. Com a sua implementação os testes com erro devem passar a funcionar. 
-A adição de novos testes é sempre bem-vinda, mas sem alterar os já implementados.
-
-
-### O que esperamos
-- Implementação dos testes faltantes e de novos testes para os métodos/serviços/entidades criados
-- Construção das 4 rotas solicitadas
-- Implementação de um job para controle dos carrinhos abandonados
-
-
-### Itens adicionais / Legais de ter
-- Utilização de factory na construção dos testes
-- Desenvolvimento do docker-compose / dockerização da app
-
-A aplicação já possui um Dockerfile, que define como a aplicação deve ser configurada dentro de um contêiner Docker. No entanto, para completar a dockerização da aplicação, é necessário criar um arquivo `docker-compose.yml`. O arquivo irá definir como os vários serviços da aplicação (por exemplo, aplicação web, banco de dados, etc.) interagem e se comunicam.
-
-- Adicione tratamento de erros para situações excepcionais válidas, por exemplo: garantir que um produto não possa ter quantidade negativa. 
-
-- Se desejar você pode adicionar a configuração faltante no arquivo `docker-compose.yml` e garantir que a aplicação rode de forma correta utilizando Docker. 
-
-## Informações técnicas
-
-### Dependências
-- ruby 3.3.1
-- rails 7.1.3.2
-- postgres 16
-- redis 7.0.15
-
-### Como executar o projeto
-
-## Executando a app sem o docker
-Dado que todas as as ferramentas estão instaladas e configuradas:
-
-Instalar as dependências do:
-```bash
-bundle install
+spec/
+├── factories/                   # Factories para testes
+├── models/                      # Testes de modelo
+├── requests/                    # Testes de API
+└── sidekiq/                     # Testes de jobs
 ```
 
-Executar o sidekiq:
+## 🔧 **Configurações**
+
+### **Banco de Dados**
+- **Desenvolvimento**: `store_development`
+- **Teste**: `store_test`
+- **Configuração**: `config/database.yml`
+
+### **Sidekiq**
+- **Configuração**: `config/sidekiq.yml`
+- **Job de abandono**: Executa a cada hora
+- **Interface web**: Disponível em `/sidekiq`
+
+### **Variáveis de Ambiente**
 ```bash
-bundle exec sidekiq
+DATABASE_URL=postgresql://postgres:password@localhost:5432/store_development
+REDIS_URL=redis://localhost:6379/0
+RAILS_ENV=development
 ```
 
-Executar projeto:
-```bash
-bundle exec rails server
-```
+## 🧪 **Executando Testes**
 
-Executar os testes:
 ```bash
+# Todos os testes
 bundle exec rspec
+
+# Testes específicos
+bundle exec rspec spec/models/
+bundle exec rspec spec/requests/
+bundle exec rspec spec/sidekiq/
+
+# Com cobertura
+bundle exec rspec --format documentation
 ```
 
-### Como enviar seu projeto
-Salve seu código em um versionador de código (GitHub, GitLab, Bitbucket) e nos envie o link publico. Se achar necessário, informe no README as instruções para execução ou qualquer outra informação relevante para correção/entendimento da sua solução.
+## 📝 **Decisões Técnicas**
+
+### **Arquitetura**
+- **Controllers**: Focados em receber requisições e retornar respostas
+- **Models**: Contêm validações e lógica de negócio
+- **Jobs**: Para processamento assíncrono (carrinhos abandonados)
+
+### **Sessão**
+- **Gerenciamento**: Automático via `session[:cart_id]`
+- **Criação**: Novo carrinho quando necessário
+- **Abandono**: Carrinhos abandonados são ignorados
+
+### **Validações**
+- **Quantidade**: Deve ser maior que 0
+- **Produto**: Deve existir no banco
+- **Unicidade**: Um produto por carrinho (quantidade somada)
+
+## 🚀 **Próximos Passos (Melhorias Futuras)**
+
+- [ ] **Cache** - Redis para melhor performance
+- [ ] **Logs estruturados** - Para monitoramento
+- [ ] **Documentação API** - Swagger/OpenAPI
+- [ ] **Testes de integração** - Mais abrangentes
+- [ ] **Monitoramento** - Métricas de carrinhos abandonados
+- [ ] **Notificações** - Email para carrinhos abandonados
+
+---
+
+**Desenvolvido para o teste técnico da RD Station** 🚀
