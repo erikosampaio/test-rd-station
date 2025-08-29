@@ -18,6 +18,10 @@ gem 'guard-livereload', require: false
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ]
   gem 'rspec-rails', '~> 6.1.0'
+  gem 'awesome_print'
+  gem 'pry-rails'
+  gem 'factory_bot_rails', '~> 6.4'
+  gem 'shoulda-matchers', '~> 5.0'
 end
 
 group :development do
